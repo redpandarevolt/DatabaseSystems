@@ -1,0 +1,477 @@
+.headers on
+.mode column
+
+.print 
+.print Marcela Gomez
+.print CSS 475 Winter 2019
+.print 06 Homework
+.print
+
+
+
+.print
+.print #1 profit per pound of package
+.print
+
+
+SELECT Shipper.FirstName, Shipper.LastName, SUM(weight) * .15 as Profit
+FROM Shipper
+    JOIN Ticket ON (Shipper.Id = Ticket.ShipperId)
+    JOIN Package ON (ticket.id = Package.ticketId)
+WHERE Weight IS NOT NULL
+GROUP BY Shipper.Id
+ORDER BY Shipper.LastName ASC;
+
+
+.print
+.print #2
+.print
+
+
+SELECT Shipper.LastName,Shipper.FirstName
+FROM Shipper 
+    LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperId)
+WHERE Ticket.ShipperId IS NULL
+GROUP BY Shipper.Id
+ORDER BY Shipper.LastName ASC;
+
+
+.print
+.print #3
+.print
+
+
+SELECT  Shipper.FirstName, Shipper.LastName, COALESCE(status.description, 'None') as Status
+FROM Shipper
+    LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperId)
+    LEFT JOIN Status ON (Shipper.statusId = Status.Id)
+GROUP BY Shipper.Id
+ORDER BY LastName asc; 
+
+.print
+.print #4
+.print
+
+
+SELECT Description, Count(*) Num
+FROM ( 
+    SELECT Shipper.LastName, IFNULL(Status.description, 'NoStatus') AS Description, Shipper.StatusId AS StatusId
+    FROM Shipper
+	LEFT JOIN Status ON(Shipper.statusId = Status.Id)
+    Group By Shipper.Id)
+GROUP BY Description
+ORDER BY Description ASC;
+
+
+.print
+.print.print #5
+.print
+
+.width 8, 20
+SELECT * 
+From (
+    SELECT DISTINCT TailNumber, 'Sch '||destination AS Location
+    FROM Airplane
+    WHERE location IS NOT NULL AND Destination IS NOT NULL
+    GROUP BY TailNumber)
+UNION
+SELECT * 
+From (
+    SELECT TailNumber, COALESCE(Destination, 'At ')||location AS Location
+    FROM Airplane
+    WHERE Location IS NOT NULL AND Destination IS NULL
+    ORDER BY Airplane.Id)
+UNION
+SELECT * 
+From (
+    SELECT TailNumber, COALESCE(Location, 'En Rte ')||destination AS Location 
+    FROM Airplane
+    WHERE destination IS NOT NULL AND Location IS NULL
+    ORDER BY Airplane.Id);
+
+
+.print
+.print #6 Late packages for Platinum, Gold and Silver Status. (Output matches classmates output) 
+.print
+
+.print First Case potential answer after typos and corrections were made to the database
+.print When comparing output with classmates this is what a lot of them had after db updates
+.print
+.print
+
+.width 10, 12, 12, 20, 10
+SELECT *
+FROM (
+    SELECT FirstName, LastName, Description, TicketNumber, BarCode
+    FROM (
+        SELECT Shipper.FirstName  AS FirstName ,Shipper.LastName AS LastName,  Status.description AS Description, Ticket.TicketNumber AS TicketNumber, Package.BarCode AS BarCode, Shipper.ID, Shipper.StatusId, dateTime(TicketNumber, '+'||2||' days') AS ExpDate
+        FROM Shipper 
+	    JOIN Ticket  ON (Shipper.Id = Ticket.ShipperId ) 
+	    JOIN Status  ON (Shipper.StatusId = Status.Id)
+	    JOIN Package ON (Ticket.Id = Package.TicketId)
+        WHERE Status.Description = 'Platinum' AND ExpDate < '2018-03-09'
+        ORDER BY Description, Status.Id)
+)
+UNION ALL
+SELECT * 
+FROM ( 
+    SELECT FirstName, LastName, Description, TicketNumber, BarCode
+    FROM (
+        SELECT Shipper.FirstName ,Shipper.LastName, Status.description, Ticket.TicketNumber, Package.BarCode, Shipper.Id, Shipper.StatusId, dateTime(TicketNumber, '+'||3||' days') AS ExpDate
+        FROM Shipper 
+	    JOIN Ticket  ON (Shipper.Id = Ticket.ShipperId ) 
+	    JOIN Status  ON (Shipper.StatusId = Status.Id)
+	    JOIN Package ON (Ticket.Id = Package.TicketId)        
+	WHERE Status.Description = 'Gold' AND ExpDate < '2018-03-09'
+        ORDER BY Description, Status.Id)
+)
+UNION ALL
+SELECT *
+FROM ( 
+    SELECT FirstName, LastName, Description, TicketNumber, BarCode
+    FROM (
+        SELECT Shipper.FirstName ,Shipper.LastName, Status.description, Ticket.TicketNumber, Package.BarCode, Shipper.Id, Shipper.StatusId, dateTime(TicketNumber, '+'||4||' days') AS ExpDate
+        FROM Shipper 
+	    JOIN Ticket  ON (Shipper.Id = Ticket.ShipperId ) 
+	    JOIN Status  ON (Shipper.StatusId = Status.Id)
+	    JOIN Package ON (Ticket.Id = Package.TicketId) 
+        WHERE  Status.Description = 'Silver' AND ExpDate < '2018-03-09'
+        ORDER BY Description, Status.Id)
+);
+
+
+.print
+.print
+.print This is the answer as seen on the teachers original results. 
+.print
+.print
+
+
+SELECT *
+FROM (
+     SELECT *
+     FROM (
+         SELECT FirstName, LastName, Description, TicketNumber, BarCode
+         FROM (
+             SELECT Shipper.FirstName AS FirstName, Shipper.LastName AS LastName,  Status.description AS Description, Ticket.TicketNumber AS TicketNumber, Package.BarCode AS BarCode, Shipper.ID, Shipper.StatusId, dateTime(TicketNumber, '+'||2||' days') AS ExpDate
+             FROM Shipper 
+	    	JOIN Ticket  ON (Shipper.Id = Ticket.ShipperId ) 
+	    	JOIN Status  ON (Shipper.StatusId = Status.Id)
+	    	JOIN Package ON (Ticket.Id = Package.TicketId)
+             WHERE Status.Description = 'Platinum' AND ExpDate < '2018-03-09'
+             GROUP BY LastName, Description, Shipper.StatusId
+             ORDER BY LastName ASC)
+     )
+     UNION ALL
+     SELECT * 
+     FROM ( 
+         SELECT FirstName, LastName, Description, TicketNumber, BarCode
+         FROM (
+              SELECT Shipper.FirstName AS FirstName, Shipper.LastName AS LastName, Status.description, Ticket.TicketNumber, Package.BarCode, Shipper.Id, Shipper.StatusId, dateTime(TicketNumber, '+'||3||' days') AS ExpDate
+             FROM Shipper 
+	    	JOIN Ticket  ON (Shipper.Id = Ticket.ShipperId ) 
+	    	JOIN Status  ON (Shipper.StatusId = Status.Id)
+	    	JOIN Package ON (Ticket.Id = Package.TicketId)
+             WHERE Status.Description = 'Gold' AND ExpDate < '2018-03-09'
+             GROUP BY LastName, Description, Shipper.StatusId
+             ORDER BY LastName ASC)
+     )
+     UNION ALL
+     SELECT *
+     FROM ( 
+         SELECT FirstName, LastName, Description, TicketNumber, BarCode
+         FROM (
+             SELECT Shipper.FirstName AS FirstName,Shipper.LastName As LastName, Status.description, Ticket.TicketNumber, Package.BarCode, Shipper.Id, Shipper.StatusId, dateTime(TicketNumber, '+'||4||' days') AS ExpDate 
+             FROM Shipper 
+	    	JOIN Ticket  ON (Shipper.Id = Ticket.ShipperId ) 
+	    	JOIN Status  ON (Shipper.StatusId = Status.Id)
+	    	JOIN Package ON (Ticket.Id = Package.TicketId)
+             WHERE Status.Description = 'Silver' AND ExpDate < '2018-03-09'
+             GROUP BY LastName, Description, Shipper.StatusId
+             ORDER BY LastName ASC)
+     )
+     GROUP BY LastName, Description
+     ORDER BY LastName ASC
+)
+GROUP BY LastName, Description
+ORDER BY LastName ASC;
+
+
+.print
+.print #7
+.print
+
+.width 10, 18, 18
+SELECT Package.BarCode, Ticket.Destination AS FinalDestination, Airplane.Destination AS InterimDestination
+FROM Package, Ticket, Airplane
+WHERE Ticket.Id = Package.TicketId AND Package.FlightId = Airplane.Id AND Airplane.destination <> Ticket.destination
+GROUP BY Package.BarCode;
+
+
+.print
+.print #8
+.print
+
+SELECT Shipper.FirstName, Shipper.LastName, COUNT(*) NumLost
+FROM Shipper
+  JOIN Ticket   ON (Shipper.Id = Ticket.ShipperID)  
+  JOIN Package  ON (Ticket.Id = Package.TicketId) 
+  JOIN Airplane ON (Package.FlightId = Airplane.Id)
+WHERE Airplane.destination <> Ticket.destination
+GROUP BY Shipper.Id
+ORDER BY LastName ASC;
+
+
+
+.print
+.print #9 PACKAGES ON WRONG FLIGHT, Correct Flight and No Ticket
+.print
+
+
+SELECT * 
+FROM  (
+    SELECT Shipper.FirstName, Shipper.LastName, COUNT(*) NumLost
+    FROM Shipper
+      JOIN Ticket   ON (Shipper.Id = Ticket.ShipperID)  
+      JOIN Package  ON (Ticket.Id = Package.TicketId) 
+      JOIN Airplane ON (Package.FlightId = Airplane.Id)
+    WHERE Airplane.destination <> Ticket.destination
+    GROUP BY Shipper.Id
+    ORDER BY LastName ASC
+)
+UNION ALL 
+SELECT * 
+FROM  (
+    SELECT Shipper.FirstName, Shipper.LastName, 0 as NumLost
+    FROM Shipper Left 
+        JOIN Ticket ON(Shipper.ID = Ticket.ShipperId)
+	JOIN Package ON (Ticket.Id = Package.TicketId)
+	JOIN Airplane ON (Package.FlightId = Airplane.Id)
+    WHERE Airplane.destination = Ticket.destination
+    GROUP BY SHIPPER.ID
+    ORDER BY Shipper.LastName)
+UNION ALL
+SELECT * 
+FROM  (
+    SELECT Shipper.FirstName, Shipper.LastName, 0 AS NumLost
+        FROM Shipper 
+            LEFT JOIN Ticket ON (Shipper.ID = Ticket.ShipperId)
+            LEFT JOIN Package ON (Ticket.Id = Package.TicketId)
+            LEFT JOIN Airplane On (Package.FlightId = Airplane.Id)
+    WHERE  Ticket.Id IS NULL 
+    GROUP BY Shipper.ID
+)
+UNION ALL
+SELECT * 
+FROM  (
+    SELECT FirstName, LastName, 0 AS NumLost
+    FROM (
+        SELECT Shipper.Id, Shipper.FirstName AS FirstName, Shipper.LastName AS LastName, Package.BarCode, Ticket.Id AS Id, Ticket.Destination, Airplane.Destination AS Destination
+        FROM Shipper 
+            LEFT JOIN Ticket ON (Shipper.ID = Ticket.ShipperId)
+            LEFT JOIN Package ON (Ticket.Id = Package.TicketId)
+            LEFT JOIN Airplane On (Package.FlightId = Airplane.Id)
+        GROUP BY SHIPPER.ID
+        ORDER BY Shipper.Id)
+    WHERE Id IS NOT NULL AND Destination IS NULL AND NumLost > 0)
+GROUP BY LastName, FirstName
+Order By NumLost DESC;
+
+
+
+.print 
+.print #10 Package Report Red  > 30 lb., Green > 25 lb, Unknown color > 35 lb
+.print 
+
+
+SELECT *
+FROM ( 
+    SELECT BarCode, Weight, Color 
+    FROM Package 
+    WHERE weight > 25 AND Color = 'Green'
+    ORDER BY WEIGHT DESC)
+
+UNION ALL
+SELECT *
+FROM (
+    SELECT BarCode, Weight, Color 
+    FROM Package 
+    WHERE weight > 30 AND Color = 'Red'
+    ORDER BY WEIGHT DESC)
+UNION ALL
+SELECT *
+FROM (
+    SELECT BarCode, Weight, IFNULL(Color, 'Unknown')
+    FROM Package 
+    WHERE weight > 35 AND Color IS NULL
+    ORDER BY WEIGHT DESC);
+
+
+.print 
+.print #11 Packages By:  'At Terminal  <ICAO>’, ‘En Route <ICAL>’ ,‘Waiting Takeoff<ICAO>’
+.print 
+
+
+SELECT *
+FROM (
+    SELECT Shipper.FirstName, Shipper.LastName, Package.BarCode, 'At Terminal '||AirportId AS   Location
+    FROM Shipper
+        LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+        LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+        LEFT JOIN Airplane ON (Package.FlightId = Airplane.Id)
+    WHERE Package.RoomNumber IS NOT NULL AND Ticket.Destination IS NOT NULL AND AirportId IS NOT NULL
+    ORDER BY Package.AirportId)
+UNION ALL
+SELECT *
+FROM (
+    SELECT Shipper.FirstName, Shipper.LastName, Package.BarCode, 'En Route '||Airplane.destination AS Location
+    FROM Shipper
+        LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+        LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+        LEFT JOIN Airplane ON (Package.FlightId = Airplane.Id)
+    WHERE Package.RoomNumber IS NULL AND AirportId IS NULL AND Airplane.destination IS NOT NULL
+    ORDER BY LOCATION)
+UNION ALL
+SELECT *
+FROM (
+    SELECT Shipper.FirstName, Shipper.LastName, Package.BarCode, 'Waiting TakeOff' AS Location
+    FROM Shipper
+        LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+        LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+        LEFT JOIN Airplane ON (Package.FlightId = Airplane.Id)
+    WHERE Package.RoomNumber IS NULL AND Package.AirportId IS NULL AND Airplane.Destination IS NULL AND Package.BarCode IS NOT NULL
+    ORDER BY  Location, Airplane.Location);
+
+
+
+.print
+.print #12 Profit per customer based on weight shipping and penalty for no ticket
+.print
+.print
+
+
+SELECT P.LastName AS LastName, P.FirstName AS FirstName, P.PPProfit + T.TicketProfit - 1.0 AS Profit
+FROM 
+(
+    SELECT LastName, FirstName, TicketProfit
+    FROM  (
+        SELECT * 
+        FROM (
+            SELECT LastName, FirstName, sum(TicketProfit) AS TicketProfit
+            FROM ( 
+                SELECT Shipper.LastName AS LastName, Shipper.FirstName AS FirstName, 1.00 AS TicketProfit
+                FROM Shipper
+                    LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+                    LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+                WHERE Ticket.Id IS NOT NULL
+                GROUP BY Ticket.Id
+                ORDER BY FirstName, LastName)
+            GROUP BY FirstName, LastName
+            ORDER BY FirstName
+        )
+        UNION
+        SELECT * 
+        FROM (
+            SELECT LastName, FirstName, TicketProfit
+            FROM ( 
+                SELECT Shipper.ID AS SID, Shipper.LastName AS LastName, Shipper.FirstName AS FirstName, 0 AS TicketProfit
+                FROM Shipper
+                    LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+                    LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+                WHERE Ticket.Id IS NULL
+                GROUP BY SID, LastName, FirstName
+                ORDER BY FirstName, LastName)
+            GROUP BY FirstName, LastName
+            ORDER BY FirstName
+         )
+        GROUP BY FirstName, LastName
+        ORDER BY FirstName
+    )
+) T,
+(
+    SELECT LastName, FirstName, Sum(Profit) AS PPProfit
+    FROM  ( 
+
+        SELECT LastName, FirstName, TicketId, Barcode, Weight, IFNULL(Profit, -1.5) AS Profit
+        FROM (
+            SELECT Shipper.LastName AS LastName, Shipper.FirstName As FirstName, Ticket.Id AS TicketId, Package.Barcode AS BarCode, Package.weight AS Weight, Package.Weight * 0.15 AS Profit
+            FROM Shipper
+                 LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+                 LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+            ORDER BY LastName, FirstName
+        )
+        ORDER BY FirstName, LastName
+    )
+    GROUP BY FirstName, LastName
+    ORDER BY FirstName
+)P
+
+GROUP BY P.FirstName, P.LastName
+ORDER BY P.FirstName ASC;
+
+
+.print
+.print #13. Total Profit
+.print
+
+.width 15     
+Select Sum (Profit)
+From ( 
+    SELECT P.LastName, P.FirstName, P.PPProfit + T.TicketProfit - 1.0 AS Profit
+    FROM 
+    (
+        SELECT LastName, FirstName, TicketProfit
+        FROM  (
+            SELECT * 
+            FROM (
+                SELECT LastName, FirstName, sum(TicketProfit) AS TicketProfit
+                FROM ( 
+                    SELECT Shipper.LastName AS LastName, Shipper.FirstName AS FirstName, 1.00 AS TicketProfit
+                    FROM Shipper
+                        LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+                        LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+                    WHERE Ticket.Id IS NOT NULL
+                    GROUP BY Ticket.Id
+                    ORDER BY FirstName, LastName)
+                GROUP BY FirstName, LastName
+                ORDER BY FirstName
+            )
+            UNION
+            SELECT * 
+            FROM (
+                Select LastName, FirstName, TicketProfit
+                FROM ( 
+                    SELECT Shipper.ID AS SID, Shipper.LastName AS LastName, Shipper.FirstName AS FirstName, 0 AS TicketProfit
+                    FROM Shipper
+                        LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+                        LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+                    WHERE Ticket.Id IS NULL
+                    GROUP BY SID, LastName, FirstName
+                    ORDER BY FirstName, LastName)
+                GROUP BY FirstName, LastName
+                ORDER BY FirstName
+             )
+            GROUP BY FirstName, LastName
+            ORDER BY FirstName
+        )
+    ) T,
+    (
+        SELECT LastName, FirstName, Sum(Profit) AS PPProfit
+        FROM  ( 
+
+            SELECT LastName, FirstName, TicketId, Barcode, Weight, IFNULL(Profit, -0.5) AS Profit
+            FROM (
+                SELECT Shipper.LastName AS LastName, Shipper.FirstName As FirstName, Ticket.Id AS TicketId, Package.Barcode AS BarCode, Package.weight AS Weight, Package.Weight * 0.15 AS Profit
+                FROM Shipper
+                     LEFT JOIN Ticket ON (Shipper.Id = Ticket.ShipperID)
+                     LEFT JOIN Package ON ( Ticket.Id = Package.TicketId)
+                ORDER BY LastName, FirstName
+            )
+            ORDER BY FirstName, LastName
+        )
+        GROUP BY FirstName, LastName
+        ORDER BY FirstName
+    )P
+
+    GROUP BY P.FirstName, P.LastName
+    ORDER BY P.FirstName ASC);

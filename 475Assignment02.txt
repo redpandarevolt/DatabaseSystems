@@ -1,0 +1,36 @@
+.headers on
+.mode column
+.print Marcela Gomez
+.print CSS 475 Winter 2019
+.print
+.print #1
+.print
+-- Optional single line comment Query 1
+Select * from Room;
+.print
+.print #2
+.print
+/* Optional multi line comment
+	still in comment
+*/
+SELECT Employee.Id, Employee.name, Meeting.purpose, meeting.startTime, room.building, room.roomNum
+FROM Employee, Attendees, Meeting, Room
+WHERE Employee.Id = Attendees.employeeId and Attendees.meetingId = MeetingId and Meeting.roomId = Room.Id and Employee.name = 'Max';
+.print
+--Query Three Looking for Sarah
+.print
+.print #3
+.print
+SELECT Employee.Id, Employee.name
+FROM Employee
+WHERE Employee.name = 'Sarah';
+.print
+--Query 4 trying out new command lines
+.print
+.print 4
+.print
+SELECT Employee.Id, Employee.name, count(*) as numMeetings
+FROM Employee, Attendees
+WHERE Employee.Id = attendees.employeeId
+GROUP BY Employee.Id
+ORDER BY numMeetings desc;

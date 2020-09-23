@@ -1,0 +1,70 @@
+.headers on
+.mode column
+
+.print Marcela Gomez
+.print Xinyu Wang
+.print Tommy Tang
+
+.print 
+.print #1
+.print
+--Query One room number and capacity for building b
+
+SELECT  RoomNum, capacity
+FROM ROOM
+WHERE building = 'B';
+
+.print
+.print #2
+.print
+--Query building, room number, capacity from all rooms with cap 4-30
+
+SELECT Room.building, roomNum, capacity
+FROM Room 
+WHERE capacity > 4 AND capacity <30;
+
+.print
+.print #3
+.print
+--OwnerName  StartTime Duration for every Staff meeting currently scheduled.
+
+SELECT Name AS OwnerName, StartTime, Duration
+FROM Meeting, Employee	
+WHERE Meeting.OwnerID = Employee.ID AND Meeting.purpose = 'Staff';
+
+.print
+.print #4
+.print
+--Name for all attendees of the Sales meeting
+SELECT name
+FROM Meeting, Employee, Attendees
+WHERE Attendees.EmployeeId = Employee.ID AND Attendees.MeetingID = Meeting.ID AND Meeting.purpose = 'Sales';
+
+.print
+.print #5
+.print
+--Purpose StartTime Duration for all meetings for Ariel
+SELECT Purpose, StartTime, Duration
+
+FROM Employee, Meeting, Attendees
+WHERE Attendees.MeetingID = Meeting.ID AND Attendees.EmployeeId = Employee.ID AND Employee.Name = 'Ariel';
+
+.print
+.print #6
+.print
+
+--Name Purpose StartTime Duration for all meetings for persons whose homephone is 341.  Sort return list by start time with latest at the top of the list. 
+
+SELECT Name, Purpose, StartTime Duration
+FROM Employee, Attendees, Meeting
+WHERE Attendees.MeetingID = Meeting.ID AND Attendees.EmployeeId = Employee.ID AND Employee.HomePhone = 341
+ORDER BY Meeting.StartTime DESC;
+
+.print
+.print #7
+.print
+--NAME HomePhone  For all employees whose name begins with ‘A’
+
+SELECT Name, HomePhone
+FROM Employee
+WHERE Employee.Name like 'A%';

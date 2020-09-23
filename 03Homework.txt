@@ -1,0 +1,107 @@
+
+.headers on
+.mode column
+
+.print Homework 03
+.print
+.print Marcela Gomez
+.print CSS 475 Winter 2019
+.print
+
+.print #1
+.print
+--all Rooms in the system
+
+SELECT Building, RoomNum
+From Room;
+
+.print
+.print #2
+.print
+--all rooms with capacity between 10 and 15
+
+SELECT Building, RoomNum, Capacity
+FROM Room
+WHERE Room.capacity > 9 AND Room.capacity < 16;
+
+.print
+.print #3
+.print
+--Attendees names For the DB Issues meeting 
+.print
+SELECT Name As Attendees                                          
+FROM Employee, Meeting, Attendees 
+WHERE Meeting.Id = Attendees.meetingId AND Employee.Id = Attendees.employeeId and Meeting.purpose = 'DB Issues';
+
+.print
+.print #4
+.print
+
+--4 – StartTime  Duration  Purpose for all of Max’s meetings  
+SELECT purpose, startTime, duration                                         FROM Meeting, Employee, Attendees                                   
+WHERE Employee.Id = Attendees.EmployeeId AND Attendees.meetingId = Meeting.Id AND Employee.name = 'Max'
+ORDER BY startTime ASC;
+
+.print
+.print #5
+.print
+
+--StartTime Duration Purpose Building RoomNumber for all of Alice’s  meetings.  
+
+
+SELECT startTime, duration, purpose, building, Room.roomNum AS RoomNumber
+FROM Meeting, Employee, Room, Attendees                                                WHERE Employee.Id = Attendees.employeeId and Attendees.meetingId = Meeting.Id AND Room.Id = Meeting.roomId AND Employee.name = 'Max'
+ORDER BY startTime ASC;
+
+
+.print
+.print #6
+.print
+--6 – NamePhoneForallemployees.Sort by employee name. A at the top of the list. 
+
+SELECT Name, Phone
+FROM Employee
+ORDER BY Name DESC;
+
+
+.print
+.print #7
+.print
+
+--7 – OrganizerName Purpose Building RoomNumber for meetings owned by Alice;
+
+SELECT Employee.Name  AS OrganizerName, Meeting.purpose, Room.Building, Room.roomNum
+FROM Employee, Attendees, Meeting, Room                                      
+WHERE Employee.Id = Attendees.employeeId AND Attendees.EmployeeId = Meeting.ownerId AND Attendees.meetingId = Meeting.Id and Meeting.roomId = Room.Id and Employee.name = 'Alice';
+
+
+.print
+.print #8
+.print
+
+--8 – Name PhoneNumber for all employees whose phone number begins with ‘72’
+
+SELECT NAME, PHONE
+FROM Employee
+WHERE phone like '72%';
+
+.print
+.print #9
+.print
+
+--9 – OrganizerName, HomePhoneNumber for every meeting organizer.  
+
+SELECT DISTINCT  Name AS OrganizerName, homePhone as HomePhoneNumber
+FROM Employee, Meeting, Attendees
+WHERE Employee.Id = Meeting.ownerId;
+
+.print
+.print #10
+.print
+
+--10 – Building RoomNumber StartTime  for every meeting order by start time;
+
+SELECT Building, Room.roomNum AS RoomNumber, startTime
+FROM Meeting, Room
+WHERE Room.Id = Meeting.roomId
+ORDER BY startTime ASC;

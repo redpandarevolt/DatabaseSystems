@@ -1,0 +1,190 @@
+.print
+.print Marcela Gomez
+.print CSS 475 Winter 2019
+.print
+.headers on
+.mode column
+
+.print
+.print 
+.print #1 number of meetings in each building – ordered by building
+.print 
+.print
+  
+SELECT building AS Building, count(*) AS NumMeetings
+FROM Room, Meeting
+WHERE Room.ID = Meeting.RoomID
+GROUP BY building
+ORDER BY building ASC;
+
+.print
+.print 
+.print #2 Show start time / end time for each meeting in building A
+.print
+.print
+
+
+SELECT R.building, R.RoomNumber, M.StartTime, M.Duration, datetime (StartTime, '+'||duration||' minute') AS EndTime
+FROM Room R, Meeting M
+WHERE R.Id = M.roomId AND R.Building = 'A';
+
+.print
+.print 
+.print #3 number of meetings in each room in each building
+.print
+.print
+
+
+SELECT R.building AS Building, R.RoomNumber AS RoomNumber, count (*) NumMeetings
+FROM Room R, Meeting M
+WHERE R.ID = M.RoomID 
+GROUP BY building, RoomNumber 
+ORDER BY roomNumber;
+
+.print
+.print 
+.print #4 meetings with no Moderator
+.print
+.print
+
+SELECT m.Purpose, m.startTime
+FROM Meeting m
+WHERE m.ModeratorID is NULL;
+
+
+.print 
+.print #5 Number of empty seats in rooms based on creator.
+.print
+
+
+SELECT C.name AS name, C.capacity - A.PeepsCount AS excess
+FROM	(
+	SELECT Meeting.Id, Employee.name, Meeting.creatorId, Room.roomNumber, Room.capacity
+	FROM Employee, Meeting, Room
+	WHERE Employee.Id = Meeting.creatorId AND Room.Id = Meeting.roomId
+    ) C ,
+    (
+	SELECT Meeting.Id, Room.roomNumber, count(*) PeepsCount
+	FROM Room, Employee, Attendees, Meeting
+	WHERE Meeting.Id = Attendees.meetingId AND Room.Id = Meeting.roomId AND Employee.Id = Attendees.employeeId 
+	GROUP BY meetingId
+    ) A 
+WHERE A.Id = C.Id
+GROUP BY A.Id
+ORDER BY excess DESC;
+
+
+.print 
+.print #6 number of meetings by purpose
+.print
+ 
+
+SELECT Meeting.purpose, count(*) NumMeetings
+FROM Meeting
+GROUP BY purpose;
+
+.print 
+.print #7 number of meetings by Moderator
+.print
+
+
+SELECT Employee.name AS Moderator, count(*) NumMeetings
+FROM Meeting, Employee
+WHERE Employee.Id = Meeting.moderatorId
+GROUP BY moderatorId
+ORDER BY Moderator ASC;
+
+
+.print 
+.print #8 employee w the most meetings in system
+.print
+
+
+SELECT C.name, MAX (C.NumMeeting) 
+FROM   (
+    SELECT Employee.Id, Employee.name, count(*) NumMeeting
+    FROM Employee, Meeting, Attendees
+    WHERE Employee.Id = Attendees.employeeId AND Meeting.Id = Attendees.meetingId
+    GROUP BY Employee.Id
+    ) C ;
+
+
+.print 
+.print #9 All employees with fewer than 75% of employee with most meetings
+.print
+
+
+SELECT Less.name AS name, Less.numMeeting AS numMeeting
+FROM(
+    SELECT C.name, MAX (C.NumMeeting) AS MaxAttend
+    FROM   (
+    	SELECT Employee.Id, Employee.name, count(*) NumMeeting
+    	FROM Employee, Meeting, Attendees
+    	WHERE Employee.Id = Attendees.employeeId AND Meeting.Id = Attendees.meetingId
+    	GROUP BY name
+    ) C
+) Max,
+( 
+    SELECT Employee.Id, Employee.name, count(*) NumMeeting
+    FROM Employee, Meeting, Attendees
+    WHERE Employee.Id = Attendees.employeeId AND Meeting.Id = Attendees.meetingId
+    GROUP BY name
+) Less
+WHERE numMeeting <= Max.MaxAttend * .75
+ORDER BY name ;
+
+.print 
+.print #10 find average utilization of rooms for ‘2018-03-04 10:00’ 
+.print
+
+
+SELECT M.Scheduled * 1.0 / R.Total AS Utilization
+FROM    (
+    SELECT COUNT (*) AS Scheduled
+    FROM   (
+            SELECT Meeting.Id, Meeting.RoomId, Room.roomNumber, Meeting.startTime, Meeting.duration, dateTime(startTime, '+'||duration||' minutes') AS endTime
+            FROM Meeting, Room
+            WHERE Room.Id = Meeting.roomId AND Meeting.startTime >= '2018-03-04 09:30' AND endTime <= '2018-03-04 10:30:00'
+            GROUP BY Meeting.Id
+            ORDER BY Meeting.startTime ASC
+        ) 
+    ) M , 
+    (
+        SELECT COUNT (*) AS Total
+        FROM Room
+    ) R 
+;
+
+.print
+.print 
+.print #11 All attendees in any meeting going on at ‘2018-03-18 10:00’
+.print
+.print
+
+SELECT A.name AS name, A.purpose AS purpose 
+FROM    (
+    SELECT Employee.name AS name, Meeting.purpose AS purpose, Meeting.startTime AS startTime, dateTime (startTime, '+'||duration||' minutes') AS endTime
+    FROM Employee, Attendees, Meeting
+    WHERE Employee.Id = Attendees.employeeId AND Meeting.Id = Attendees.meetingId 
+) A 
+WHERE A.startTime >= '2018-03-18 09:30' AND A.endTime <= '2018-03-18 10:30:00'
+GROUP BY name;
+
+
+.print
+.print 
+.print #12 employees who are double booked.
+.print
+.print
+
+SELECT  A.name AS name, COUNT(startTime) AS numConcurrent
+FROM (
+    SELECT Employee.name, Meeting.purpose, Meeting.startTime, dateTime (startTime, '+'||duration||' minutes') AS endTime  
+    FROM Employee, Attendees, Meeting                   
+    WHERE Employee.Id = Attendees.employeeId AND Meeting.Id = Attendees.meetingId
+    GROUP BY Employee.Id
+) A
+WHERE A.startTime = startTime
+GROUP BY name; 
+
+

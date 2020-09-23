@@ -1,0 +1,268 @@
+.headers on
+.mode column
+
+--Life Saving Protection of database
+BEGIN TRANSACTION;
+.print
+.print Marcela Gomez
+.print HomeWork 05
+
+.print
+.print #1 Create a ticket for George Washington and one package of weight 300lb and color 'wood'
+.print 
+
+.print Create new ticket
+
+INSERT into Ticket (shipperId, ticketNumber, destination)
+VALUES (26, datetime('now'), 'KPDX');
+
+.print Update Ticket
+
+UPDATE Ticket
+SET Destination = 'KLAX'
+WHERE ShipperId = 26;
+
+
+
+.print *******************Check the ticket*********************
+.print
+SELECT * from Ticket
+WHERE ShipperId = 26;
+.print
+
+.print *******Create one package KPDX to KLAX: 300 lbs, color wood, store room#1 KPDX*******
+.print
+INSERT into Package(TicketId, isPriority, RoomNumber, AirportId, Weight, Color)
+VALUES(41, 0, 1, 'KPDX', 300, 'Wood');
+
+
+.print ******************************Check package is inserted******************************
+SELECT * from Package 
+WHERE TicketId = 41;
+
+
+.print
+.print
+.print #2 all luggage in any luggage room in KPDX that needs to go to KLAX
+.print Columns should be: RoomNumber  BarCode RoomWeight 
+.print
+
+
+SELECT RoomNumber, Barcode, SUM(Weight) AS RoomWeight
+FROM   (
+    SELECT Barcode, Weight, Color, ticketId, RoomNumber, AirportId, Ticket.destination
+    FROM Package, Ticket
+    WHERE Ticket.Id = Package.ticketId AND Ticket.destination = 'KLAX' AND AirportId = 'KPDX'
+    )
+Group by roomNumber;
+
+
+
+
+.print
+.print
+.print #3 place all the luggage identified in #2 above into the airplane with tail number ‘561DS’
+.print
+
+
+
+
+SELECT * FROM Airplane
+WHERE location = 'KPDX' AND (destination = 'KLAX' OR destination is null);
+
+.print Update Package
+
+UPDATE Package
+.print
+SET flightId = 2, RoomNumber = NULL, AirportID = NULL
+Where BarCode In (100008, 100026, 100061);
+
+.print *************************check update in package status*************************
+.print
+
+SELECT * from Package
+WHERE BarCode In (100008, 100026, 100061);
+
+UPDATE Airplane
+SET Destination = 'KLAX'
+Where TailNumber = '561DS';
+.print
+.print
+SELECT * FROM Airplane
+WHERE Destination = 'KLAX' AND TailNumber = '561DS';
+
+
+
+
+.print
+.print
+.print #4 Number of packages and total weight on ‘56DS’
+.print
+.print 
+
+
+SELECT Sum(Weight) as TotalWeight, Count (*) NumPackages
+FROM   (
+    SELECT * 
+    FROM Airplane, Package
+    WHERE Airplane.Id = Package.FlightId AND TailNumber = '561DS' AND FlightID = 2
+);
+print
+.print
+
+SELECT Airplane.destination, Package.airportId, Package.ticketId
+FROM Package, Airplane
+WHERE Airplane.ID = Package.FlightID AND Airplane.TailNumber = '561DS'
+GROUP BY airportId;
+print
+.print
+--SELECT * from Airplane, Package
+--WHERE TailNumber = '561DS'
+--ORDER BY flightId;
+
+
+SELECT * 
+FROM Airplane, Package
+WHERE Airplane.Id = Package.FlightId AND TailNumber = '561DS' 
+GROUP BY airportID;
+
+
+
+
+.print
+.print
+.print #5 Launch the plane to update the airplane record to say it is on the way to KLAS.
+.print
+.print
+
+
+UPDATE Airplane
+SET Location = NULL
+Where TailNumber = '561DS';
+
+SELECT * from Airplane WHERE TailNumber = '561DS';
+
+
+.print
+.print
+.print #6 All airplanes in flight, # packages, total weight of packages
+.print
+.print 
+
+
+SELECT TailNumber, Destination, Count(*) NumPackages, Sum(Weight) AS TotalWeight
+from Airplane, Package
+WHERE Airplane.ID = Package.FlightID AND location is NULL
+GROUP BY TailNumber;
+
+
+.print
+.print
+.print #7. 561DS has landed at KLAX.  Update your DB appropriately
+.print
+.print 
+
+
+UPDATE Airplane
+SET Destination = NULL
+Where TailNumber = '561DS';
+
+UPDATE Airplane
+SET Location = 'KLAX'
+Where TailNumber = '561DS';
+
+SELECT * from Airplane WHERE TailNumber = '561DS';
+
+
+.print
+.print
+.print #8A display room number, barcode, and weight of all packages in a luggage room at ‘KLAX’
+.print
+.print 
+
+SELECT RoomNumber, BarCode, Weight AS GroundWeight
+From Package
+WHERE AirportId = 'KLAX' AND FlightId is NULL;
+
+
+.print
+.print
+.print #8B tail number, barcode, and package weight on all packages on all planes that are on the ground at KLAX.
+.print
+.print
+
+
+SELECT  Airplane.TailNumber, Package.BarCode, Package.weight AS OnPlaneWeigth
+FROM Airplane, Package, Ticket
+WHERE Airplane.Id = Package.flightId AND Package.ticketId = Ticket.Id AND Airplane.location = 'KLAX'
+GROUP BY Package.ticketId;
+
+
+.print
+.print
+.print #9 Update the database to show that the packages in ‘561DS’ have been moved to storage room #2
+.print
+.print 
+
+
+UPDATE PACKAGE
+SET RoomNumber = 2, AirportId = 'KLAX', flightId = NULL
+WHERE BarCode IN ( 
+    SELECT BarCode FROM Airplane a , Package p
+    WHERE a.Id = p.flightId AND a.TailNumber = '561DS');
+
+SELECT * FROM Package
+WHERE BarCode IN (100008, 100026, 100027,100050,100061 );
+
+
+.print
+.print
+.print #10 – Repeat query 8A and 8B   ( IE cut and paste the queries into #10 )
+.print
+.print
+
+.print Repeat Query 8a
+SELECT RoomNumber, BarCode, Weight AS GroundWeight
+From Package
+WHERE AirportId = 'KLAX' AND FlightId is NULL;
+
+.print Repeat Query 8B
+SELECT  Airplane.TailNumber, Package.BarCode, Package.weight AS OnPlaneWeight
+FROM Airplane, Package, Ticket
+WHERE Airplane.Id = Package.flightId AND Package.ticketId = Ticket.Id AND Airplane.location = 'KLAX'
+GROUP BY Package.ticketId;
+
+.print
+.print
+.print #11 Delete that package with barcode 100026 from the DB
+.print
+.print 
+
+DELETE from Package WHERE BarCode = 100026;
+
+.print ***************Verification that barcode 100026 is removed.***************
+SELECT * FROM Package Where RoomNumber = 2;
+
+
+.print
+.print
+.print #12 – Repeat query 8A and 8B
+.print
+.print 
+
+.print Repeat Query 8a
+.print
+SELECT RoomNumber, BarCode, Weight AS GroundWeight
+From Package
+WHERE AirportId = 'KLAX' AND FlightId is NULL;
+.print
+.print Repeat Query 8b
+.print
+SELECT  Airplane.TailNumber, Package.BarCode, Package.weight AS OnPlaneWeigth
+FROM Airplane, Package, Ticket
+WHERE Airplane.Id = Package.flightId AND Package.ticketId = Ticket.Id AND Airplane.location = 'KLAX'
+GROUP BY Package.ticketId;
+.print
+.print
+--Undo all the changes to database in case of errors.
+ROLLBACK;
